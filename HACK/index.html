@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ParkSmart — Smart Parking Allocator</title>
+
+<style>
+    :root {
+      --primary: #5b5bf7;
+      --primary-dark: #4747d9;
+      --background: #f5f7fb;
+      --card: #ffffff;
+      --text: #1b1f35;
+      --muted: #7c8299;
+      --border: #e7e9f2;
+      --green: #18b979;
+      --orange: #f4a340;
+      --red: #ef5b69;
+      --blue: #4a90e2;
+      --shadow: 0 12px 30px rgba(39, 45, 85, 0.08);
+    }
+
+* {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+body {
+      font-family: Inter, Arial, sans-serif;
+      background: var(--background);
+      color: var(--text);
+    }
+
+button,
+    input,
+    select {
+      font: inherit;
+    }
+
+.app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+.sidebar {
+      width: 250px;
+      background: #15182b;
+      color: white;
+      padding: 28px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 35px;
+    }
+
+.brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+.brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: var(--primary);
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+    }
+
+.nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+.nav a {
+      color: #aeb2c7;
+      text-decoration: none;
+      padding: 13px 14px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+
+.nav a:hover,
+    .nav a.active {
+      color: white;
+      background: #292d4d;
+    }
+
+.nav a.active {
+      box-shadow: inset 3px 0 0 var(--primary);
+    }
+
+.sidebar-footer {
+      margin-top: auto;
+      color: #aeb2c7;
+      font-size: 12px;
+      line-height: 1.6;
+      padding: 12px;
+    }
+
+.main {
+      flex: 1;
+      padding: 32px;
+      overflow: hidden;
+    }
+
+.topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+.page-title h1 {
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+.page-title p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+.user-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+.notification {
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      position: relative;
+    }
+
+.notification::after {
+      content: "";
+      position: absolute;
+      top: 9px;
+      right: 10px;
+      width: 7px;
+      height: 7px;
+      background: var(--red);
+      border-radius: 50%;
+    }
+
+.avatar {
+      width: 42px;
+      height: 42px;
+      background: #dfe0ff;
+      color: var(--primary-dark);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+    }
+
+.dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+
+.stat-card {
+      background: var(--card);
+      padding: 21px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      border: 1px solid #f0f1f6;
+    }
+
+.stat-label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 13px;
+    }
+
+.stat-value {
+      font-size: 29px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+.stat-trend {
+      font-size: 12px;
+      color: var(--green);
+    }
+
+.stat-trend.warning {
+      color: var(--orange);
+    }
+
+.content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(300px, 0.9fr);
+      gap: 22px;
+    }
+
+.card {
+      background: var(--card);
+      border: 1px solid #f0f1f6;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+.card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 21px;
+    }
+
+.card-header h2 {
+      font-size: 18px;
+    }
+
+.card-header p {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+.select {
+      background: #f7f8fc;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 9px 12px;
+      color: var(--text);
+      outline: none;
+    }
+
+.parking-map {
+      background: #24283c;
+      border-radius: 14px;
+      padding: 23px;
+      min-height: 400px;
+      position: relative;
+      overflow: hidden;
+    }
+
+.parking-map::before,
+    .parking-map::after {
+      content: "";
+      position: absolute;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 44px,
+        rgba(255, 255, 255, 0.15) 45px,
+        transparent 46px
+      );
+      width: 30px;
+      height: 100%;
+      top: 0;
+    }
+
+.parking-map::before {
+      left: 14px;
+    }
+
+.parking-map::after {
+      right: 14px;
+    }
+
+.map-road {
+      position: absolute;
+      top: 18px;
+      bottom: 18px;
+      left: 48%;
+      border-left: 2px dashed rgba(255, 255, 255, 0.3);
+    }
+
+.slot-grid {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(60px, 1fr));
+      gap: 18px 50px;
+      max-width: 650px;
+      margin: auto;
+    }
+
+.slot {
+      height: 72px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: 0.2s;
+      color: white;
+    }
+
+.slot:hover {
+      transform: translateY(-3px);
+      filter: brightness(1.1);
+    }
+
+.slot.available {
+      background: rgba(24, 185, 121, 0.23);
+      border-color: var(--green);
+    }
+
+.slot.occupied {
+      background: rgba(239, 91, 105, 0.24);
+      border-color: var(--red);
+    }
+
+.slot.reserved {
+      background: rgba(244, 163, 64, 0.25);
+      border-color: var(--orange);
+    }
+
+.slot.ev {
+      border-color: var(--blue);
+      background: rgba(74, 144, 226, 0.25);
+    }
+
+.slot-number {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+.slot-status {
+      font-size: 10px;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+.legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-top: 19px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+.legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+.legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+.dot-available { background: var(--green); }
+    .dot-occupied { background: var(--red); }
+    .dot-reserved { background: var(--orange); }
+    .dot-ev { background: var(--blue); }
+
+.allocator {
+      background: linear-gradient(140deg, #5b5bf7, #7779ff);
+      color: white;
+    }
+
+.allocator .card-header p {
+      color: #d8d9ff;
+    }
+
+.allocator-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+.form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+.form-group label {
+      font-size: 12px;
+      color: #e3e4ff;
+    }
+
+.form-group input,
+    .form-group select {
+      border: none;
+      outline: none;
+      border-radius: 9px;
+      padding: 12px;
+      color: var(--text);
+      background: white;
+    }
+
+.primary-btn {
+      margin-top: 5px;
+      border: none;
+      border-radius: 9px;
+      padding: 13px;
+      background: #15182b;
+      color: white;
+      cursor: pointer;
+      font-weight: 700;
+      transition: 0.2s;
+    }
+
+.primary-btn:hover {
+      background: #080a14;
+      transform: translateY(-1px);
+    }
+
+.allocation-result {
+      display: none;
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.17);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+.allocation-result.show {
+      display: block;
+    }
+
+.activity-card {
+      margin-top: 22px;
+    }
+
+.activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+.activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+.activity-icon {
+      width: 35px;
+      height: 35px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: #eff0ff;
+      color: var(--primary);
+    }
+
+.activity-text {
+      flex: 1;
+    }
+
+.activity-text strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+
+.activity-text span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+.activity-time {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+@media (max-width: 1050px) {
+      .sidebar {
+        width: 210px;
+      }
+
+.content-grid {
+        grid-template-columns: 1fr;
+      }
+
+.dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+@media (max-width: 700px) {
+      .app {
+        display: block;
+      }
+
+.sidebar {
+        width: 100%;
+        padding: 16px;
+        gap: 18px;
+      }
+
+.nav {
+        flex-direction: row;
+        overflow-x: auto;
+      }
+
+.nav a {
+        white-space: nowrap;
+      }
+
+.sidebar-footer {
+        display: none;
+      }
+
+.main {
+        padding: 20px 15px;
+      }
+
+.topbar {
+        align-items: flex-start;
+      }
+
+.user-area {
+        display: none;
+      }
+
+.dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+.stat-card {
+        padding: 15px;
+      }
+
+.stat-value {
+        font-size: 23px;
+      }
+
+.parking-map {
+        padding: 20px 12px;
+      }
+
+.slot-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+
+.slot {
+        height: 60px;
+      }
+
+.card {
+        padding: 17px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">P</div>
+        <span>ParkSmart</span>
+      </div>
+
+<nav class="nav">
+        <a href="#" class="active">▦ <span>Dashboard</span></a>
+        <a href="#allocator">⌖ <span>Allocate Slot</span></a>
+        <a href="#parking-map">▣ <span>Parking Map</span></a>
+        <a href="#activity">◷ <span>Activity</span></a>
+      </nav>
+
+<div class="sidebar-footer">
+        Smart parking management made simple.
+        <br />
+        System status: <strong style="color:#18b979">Online</strong>
+      </div>
+    </aside>
+
+<main class="main">
+      <header class="topbar">
+        <div class="page-title">
+          <h1>Parking Dashboard</h1>
+          <p>Monitor availability and allocate parking slots in real time.</p>
+        </div>
+
+<div class="user-area">
+          <button class="notification" aria-label="Notifications">♢</button>
+          <div class="avatar">AD</div>
+        </div>
+      </header>
+
+<section class="dashboard-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Slots</div>
+          <div class="stat-value" id="totalSlots">24</div>
+          <div class="stat-trend">Parking capacity</div>
+        </div>
+
+<div class="stat-card">
+          <div class="stat-label">Available Now</div>
+          <div class="stat-value" id="availableSlots">12</div>
+          <div class="stat-trend">↑ 8.4% from yesterday</div>
+        </div>
+
+<div class="stat-card">
+          <div class="stat-label">Occupied Slots</div>
+          <div class="stat-value" id="occupiedSlots">8</div>
+          <div class="stat-trend warning">Current occupancy</div>
+        </div>
+
+<div class="stat-card">
+          <div class="stat-label">Today's Revenue</div>
+          <div class="stat-value">₹8,420</div>
+          <div class="stat-trend">↑ 12.8% from yesterday</div>
+        </div>
+      </section>
+
+<section class="content-grid">
+        <div class="card" id="parking-map">
+          <div class="card-header">
+            <div>
+              <h2>Live Parking Map</h2>
+              <p>Select a slot to view its current status.</p>
+            </div>
+
+<select class="select" id="zoneFilter">
+              <option value="all">All Zones</option>
+              <option value="A">Zone A</option>
+              <option value="B">Zone B</option>
+              <option value="C">Zone C</option>
+            </select>
+          </div>
+
+<div class="parking-map">
+            <div class="map-road"></div>
+            <div class="slot-grid" id="slotGrid"></div>
+          </div>
+
+<div class="legend">
+            <div class="legend-item">
+              <span class="legend-dot dot-available"></span>
+              Available
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot dot-occupied"></span>
+              Occupied
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot dot-reserved"></span>
+              Reserved
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot dot-ev"></span>
+              EV Charging
+            </div>
+          </div>
+        </div>
+
+<div class="card allocator" id="allocator">
+          <div class="card-header">
+            <div>
+              <h2>Smart Allocation</h2>
+              <p>Find the best available slot automatically.</p>
+            </div>
+          </div>
+
+<form class="allocator-form" id="allocatorForm">
+            <div class="form-group">
+              <label for="vehicleNumber">Vehicle Number</label>
+              <input
+                id="vehicleNumber"
+                type="text"
+                placeholder="e.g. DL 01 AB 1234"
+                required
+              />
+            </div>
+
+<div class="form-group">
+              <label for="vehicleType">Vehicle Type</label>
+              <select id="vehicleType">
+                <option value="car">Car</option>
+                <option value="bike">Motorcycle</option>
+                <option value="ev">Electric Vehicle</option>
+                <option value="accessible">Accessible Parking</option>
+              </select>
+            </div>
+
+<div class="form-group">
+              <label for="duration">Parking Duration</label>
+              <select id="duration">
+                <option value="1">1 hour</option>
+                <option value="2">2 hours</option>
+                <option value="4">4 hours</option>
+                <option value="8">8 hours</option>
+              </select>
+            </div>
+
+<button class="primary-btn" type="submit">
+              Allocate Best Slot
+            </button>
+          </form>
+
+<div class="allocation-result" id="allocationResult"></div>
+        </div>
+      </section>
+
+<section class="card activity-card" id="activity">
+        <div class="card-header">
+          <div>
+            <h2>Recent Activity</h2>
+            <p>Latest parking events from your facility.</p>
+          </div>
+        </div>
+
+<div class="activity-list" id="activityList">
+          <div class="activity-item">
+            <div class="activity-icon">↗</div>
+            <div class="activity-text">
+              <strong>Vehicle MH 12 XY 7788 allocated</strong>
+              <span>Slot A-04 · Car</span>
+            </div>
+            <div class="activity-time">2 min ago</div>
+          </div>
+
+<div class="activity-item">
+            <div class="activity-icon">↘</div>
+            <div class="activity-text">
+              <strong>Vehicle KA 05 MN 4091 exited</strong>
+              <span>Slot B-02 · 1h 35m duration</span>
+            </div>
+            <div class="activity-time">9 min ago</div>
+          </div>
+
+<div class="activity-item">
+            <div class="activity-icon">⚡</div>
+            <div class="activity-text">
+              <strong>EV charging started</strong>
+              <span>Slot C-03 · 67% battery</span>
+            </div>
+            <div class="activity-time">18 min ago</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+    const slots = [
+      { id: "A-01", zone: "A", status: "available" },
+      { id: "A-02", zone: "A", status: "occupied" },
+      { id: "A-03", zone: "A", status: "available" },
+      { id: "A-04", zone: "A", status: "reserved" },
+      { id: "A-05", zone: "A", status: "available" },
+      { id: "A-06", zone: "A", status: "occupied" },
+      { id: "A-07", zone: "A", status: "available" },
+      { id: "A-08", zone: "A", status: "available" },
+
+{ id: "B-01", zone: "B", status: "occupied" },
+      { id: "B-02", zone: "B", status: "available" },
+      { id: "B-03", zone: "B", status: "reserved" },
+      { id: "B-04", zone: "B", status: "available" },
+      { id: "B-05", zone: "B", status: "occupied" },
+      { id: "B-06", zone: "B", status: "available" },
+      { id: "B-07", zone: "B", status: "occupied" },
+      { id: "B-08", zone: "B", status: "available" },
+
+{ id: "C-01", zone: "C", status: "available" },
+      { id: "C-02", zone: "C", status: "occupied" },
+      { id: "C-03", zone: "C", status: "ev" },
+      { id: "C-04", zone: "C", status: "available" },
+      { id: "C-05", zone: "C", status: "available" },
+      { id: "C-06", zone: "C", status: "available" },
+      { id: "C-07", zone: "C", status: "available" },
+      { id: "C-08", zone: "C", status: "occupied" }
+    ];
+
+const statusLabels = {
+      available: "Available",
+      occupied: "Occupied",
+      reserved: "Reserved",
+      ev: "EV Charging"
+    };
+
+const slotGrid = document.getElementById("slotGrid");
+    const zoneFilter = document.getElementById("zoneFilter");
+    const availableSlots = document.getElementById("availableSlots");
+    const occupiedSlots = document.getElementById("occupiedSlots");
+    const allocatorForm = document.getElementById("allocatorForm");
+    const allocationResult = document.getElementById("allocationResult");
+    const activityList = document.getElementById("activityList");
+
+function renderSlots() {
+      const selectedZone = zoneFilter.value;
+
+const visibleSlots = slots.filter(slot => {
+        return selectedZone === "all" || slot.zone === selectedZone;
+      });
+
+slotGrid.innerHTML = visibleSlots.map(slot => `
+        <button
+          class="slot ${slot.status}"
+          data-slot-id="${slot.id}"
+          aria-label="${slot.id}, ${statusLabels[slot.status]}"
+        >
+          <span class="slot-number">${slot.id}</span>
+          <span class="slot-status">${statusLabels[slot.status]}</span>
+        </button>
+      `).join("");
+
+document.querySelectorAll(".slot").forEach(button => {
+        button.addEventListener("click", () => {
+          const slot = slots.find(item => item.id === button.dataset.slotId);
+          alert(`${slot.id} is currently ${statusLabels[slot.status]}.`);
+        });
+      });
+
+updateStats();
+    }
+
+function updateStats() {
+      const available = slots.filter(slot => slot.status === "available").length;
+      const occupied = slots.filter(slot => slot.status === "occupied").length;
+
+availableSlots.textContent = available;
+      occupiedSlots.textContent = occupied;
+    }
+
+function getBestSlot(vehicleType) {
+      let available = slots.filter(slot => slot.status === "available");
+
+if (vehicleType === "ev") {
+        const preferredEvSlot = slots.find(slot => slot.status === "ev");
+        if (preferredEvSlot) return preferredEvSlot;
+      }
+
+if (vehicleType === "accessible") {
+        return available.find(slot => slot.id.endsWith("01")) || available[0];
+      }
+
+return available[0];
+    }
+
+allocatorForm.addEventListener("submit", event => {
+      event.preventDefault();
+
+const vehicleNumber = document
+        .getElementById("vehicleNumber")
+        .value
+        .trim()
+        .toUpperCase();
+
+const vehicleType = document.getElementById("vehicleType").value;
+      const duration = document.getElementById("duration").value;
+      const bestSlot = getBestSlot(vehicleType);
+
+if (!bestSlot) {
+        allocationResult.innerHTML = "No suitable parking slots are currently available.";
+        allocationResult.classList.add("show");
+        return;
+      }
+
+if (bestSlot.status === "ev") {
+        bestSlot.status = "occupied";
+      } else {
+        bestSlot.status = "reserved";
+      }
+
+allocationResult.innerHTML = `
+        <strong>Slot allocated successfully.</strong><br />
+        Vehicle: ${vehicleNumber}<br />
+        Slot: <strong>${bestSlot.id}</strong><br />
+        Duration: ${duration} hour${duration > 1 ? "s" : ""}
+      `;
+
+allocationResult.classList.add("show");
+
+const activity = document.createElement("div");
+      activity.className = "activity-item";
+      activity.innerHTML = `
+        <div class="activity-icon">↗</div>
+        <div class="activity-text">
+          <strong>Vehicle ${vehicleNumber} allocated</strong>
+          <span>Slot ${bestSlot.id} · ${vehicleType}</span>
+        </div>
+        <div class="activity-time">Just now</div>
+      `;
+
+activityList.prepend(activity);
+      allocatorForm.reset();
+      renderSlots();
+    });
+
+zoneFilter.addEventListener("change", renderSlots);
+
+renderSlots();
+  </script>
+</body>
+</html>
